@@ -98,7 +98,7 @@ class BasicAuthProtectionMiddleware(object):
         if hasattr(site, 'siteauthorizationstatus'):
             auth_status = getattr(site, 'siteauthorizationstatus', None)
             return auth_status and auth_status.require_basic_authentication
-        return False
+        return True
 
     def _matches_url_exceptions(self, request_path):
         if not self.exception_patterns:
