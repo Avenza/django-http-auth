@@ -7,9 +7,9 @@ from django.core.urlresolvers import reverse
 from django.http import HttpResponse
 from django.core.exceptions import MiddlewareNotUsed
 from django.utils.module_loading import import_string
+from django.core.cache import cache
 
 from multisiteauth import settings as local_settings
-
 
 logger = logging.getLogger(__name__)
 
@@ -36,7 +36,7 @@ class BasicAuthProtectionMiddleware(object):
             raise MiddlewareNotUsed(msg)
             # if looking only for blocking access for bad-behaved crawlers SSL is not required
             # BEWARE: without encryption the basic auth credentials are sent in plain text
-            #self.basic_auth_requires_ssl = getattr(settings, 'BASIC_HTTP_AUTH_USE_SSL', '')
+            # self.basic_auth_requires_ssl = getattr(settings, 'BASIC_HTTP_AUTH_USE_SSL', '')
 
         self.exception_patterns = [
             re.compile(exception_pattern) for exception_pattern
@@ -45,7 +45,6 @@ class BasicAuthProtectionMiddleware(object):
         logger.debug("Using %s URLs for basic auth exceptions",
                      local_settings.HTTP_AUTH_URL_EXCEPTIONS)
         self.site_checker = get_custom_site_checker()
-
 
     def process_request(self, request):
         # adapted from https://github.com/amrox/django-moat/blob/master/moat/middleware.py
@@ -60,8 +59,8 @@ class BasicAuthProtectionMiddleware(object):
                 logger.debug("Could not find basic auth user in session")
 
             if local_settings.HTTP_AUTH_ALLOW_ADMIN \
-               and (request.path.startswith(reverse('admin:index')) \
-                    or request.user.is_authenticated()):
+                and (request.path.startswith(reverse('admin:index')) \
+                         or request.user.is_authenticated()):
                 return None
 
             if self._matches_url_exceptions(request.path):
@@ -73,7 +72,24 @@ class BasicAuthProtectionMiddleware(object):
                 if request.META['HTTP_X_FORWARDED_PROTO'] == 'https':
                     request.is_secure = lambda: True
 
-            return self._http_auth_helper(request)
+            remote_ip = request.META.get('HTTP_X_FORWARDED_FOR', request.META.get('REMOTE_ADDR'))
+            if remote_ip and remote_ip in local_settings.HTTP_AUTH_IP_EXCEPTIONS:
+                return None
+
+            # We don't care about the sites here.
+            if cache.get('django-http-auth-%s' % remote_ip):
+                return None
+
+            resp = self._http_auth_helper(request)
+
+            if resp is None and local_settings.HTTP_AUTH_REMEMBER_IPS_FOR > 0:
+                cache.set(
+                    'django-http-auth-%s' % remote_ip,
+                    True,
+                    local_settings.HTTP_AUTH_REMEMBER_IPS_FOR
+                )
+
+            return resp
         return None
 
     def is_auth_enabled_for_site(self, site):
@@ -108,7 +124,7 @@ class BasicAuthProtectionMiddleware(object):
                     decoded_content = base64.b64decode(auth_content).decode('ascii')
                     username, password = decoded_content.split(':')
                     if username == local_settings.HTTP_AUTH_GENERAL_USERNAME and \
-                                    password == local_settings.HTTP_AUTH_GENERAL_PASS:
+                            password == local_settings.HTTP_AUTH_GENERAL_PASS:
                         request.session['basicauth_username'] = username
                         return None
 

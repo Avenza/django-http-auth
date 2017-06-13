@@ -9,6 +9,8 @@ HTTP_AUTH_GENERAL_PASS = getattr(settings, 'BASIC_HTTP_AUTH_GENERAL_PASS', '')
 HTTP_AUTH_ALLOW_ADMIN = getattr(settings, 'BASIC_HTTP_AUTH_ALLOW_ADMIN', True)
 HTTP_AUTH_REALM = getattr(settings, 'BASIC_HTTP_AUTH_REALM', '')
 HTTP_AUTH_URL_EXCEPTIONS = getattr(settings, 'BASIC_HTTP_AUTH_URL_EXCEPTIONS', [])
+HTTP_AUTH_IP_EXCEPTIONS = getattr(settings, 'BASIC_HTTP_AUTH_IP_EXCEPTIONS', [])
+HTTP_AUTH_REMEMBER_IPS_FOR = getattr(settings, 'BASIC_HTTP_AUTH_REMEMBER_IPS_FOR', 0)
 
 """
 Option to set a custom check for determining if a site has http auth enabled.
