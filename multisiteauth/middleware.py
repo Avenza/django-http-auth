@@ -28,8 +28,12 @@ class BasicAuthProtectionMiddleware(object):
     """
     Some middleware to authenticate requests.
     """
+    get_response = None
 
-    def __init__(self):
+    def __init__(self, get_response):
+        self.get_response = get_response
+        # One-time configuration and initialization.
+
         # we'll never get into process request in case HTTP_AUTH is disabled
         if not local_settings.HTTP_AUTH_ENABLED:
             msg = "Basic authentication is not used, this removes it from middleware"
@@ -45,6 +49,14 @@ class BasicAuthProtectionMiddleware(object):
         logger.debug("Using %s URLs for basic auth exceptions",
                      local_settings.HTTP_AUTH_URL_EXCEPTIONS)
         self.site_checker = get_custom_site_checker()
+
+    def __call__(self, request):
+        override = self.process_request(request)
+
+        if override:
+            return override
+
+        return self.get_response(request)
 
     def process_request(self, request):
         # adapted from https://github.com/amrox/django-moat/blob/master/moat/middleware.py
