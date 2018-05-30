@@ -3,7 +3,7 @@ import base64
 import logging
 import re
 
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.http import HttpResponse
 from django.core.exceptions import MiddlewareNotUsed
 from django.utils.module_loading import import_string

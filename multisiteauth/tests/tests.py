@@ -3,7 +3,7 @@ import base64
 
 import pytest
 from django.contrib.auth.models import User
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.contrib.sites.models import Site
 
 from django.test import TestCase
