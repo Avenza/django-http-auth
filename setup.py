@@ -6,7 +6,7 @@ dependencies = ["Django>=2.0"]
 
 setup(
     name='django-http-auth',
-    version='1.1.1',
+    version='2.0',
     description='Simple django multisite Basic HTTP authentication middleware',
     author='TPG Bento Team',
     author_email='TPG-PBS-Bento@3pillarglobal.com',
