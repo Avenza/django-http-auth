@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 from setuptools import setup, find_packages
 
-dependencies = ["Django>=1.4,<1.9"]
+dependencies = ["Django>=2.0"]
 
 
 setup(
